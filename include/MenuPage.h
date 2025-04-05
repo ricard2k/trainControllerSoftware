@@ -2,6 +2,7 @@
 #include <TFT_eSPI.h>
 #include <vector>
 #include <functional>
+#include "IPage.h"
 
 #ifndef MAX_VISIBLE_ITEMS
 #define MAX_VISIBLE_ITEMS 5     // How many items to show on screen
@@ -15,21 +16,23 @@
 #define SCROLLBAR_WIDTH 6       // Width of scrollbar in pixels
 #endif
 
-class Menu;
+class MenuPage;
 
 struct MenuItem {
     String label;
-    Menu* submenu = nullptr;
+    std::unique_ptr<MenuPage> submenu;
     std::function<void()> onSelect = nullptr;
 
-    MenuItem(String l, Menu* sub = nullptr, std::function<void()> cb = nullptr);
+    MenuItem(String l, std::unique_ptr<MenuPage> sub = nullptr, std::function<void()> onSelect = nullptr);
+
 };
 
-class Menu {
+class MenuPage : public IPage {
 public:
-    Menu(TFT_eSPI* display, Menu* parent = nullptr);
-    void addItem(String label, Menu* submenu = nullptr, std::function<void()> onSelect = nullptr);
-    static Menu* activeMenu;
+    TFT_eSPI* getDisplay() const override;
+    MenuPage(TFT_eSPI* display, MenuPage* parent = nullptr);
+    void addItem(String label, std::unique_ptr<MenuPage> submenu = nullptr, std::function<void()> onSelect = nullptr);
+    static IPage* activePage;
     void handleInput();
     void draw();
 
@@ -37,7 +40,7 @@ private:
     std::vector<MenuItem> items;
     int selectedIndex = 0;
     TFT_eSPI* tft;
-    Menu* parentMenu;
+    MenuPage* parentMenu;
     int scrollOffset = 0;
     void moveUp();
     void moveDown();

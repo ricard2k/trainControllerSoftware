@@ -1,13 +1,16 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
+#include <memory>
 #include "TrainDisplay.h"
-#include "menu.h"
-#include "Buttons.h"
+#include "MenuPage.h"
+#include "PageManager.h"
+#include "Config.h"
+
 
 // Create display instances
 TFT_eSPI tft;         // TFT display instance
 TrainDisplay trainDisplay(tft); // Pass tft to TrainDisplay constructor
-Menu mainMenu(&tft);
+
 
 // Function to read angle from potentiometer
 int16_t readAngle(pin_size_t pin);
@@ -20,26 +23,69 @@ void setup() {
   pinMode(TC_BTN_DOWN, INPUT_PULLUP);
   pinMode(TC_BTN_LEFT, INPUT_PULLUP);
   pinMode(TC_BTN_RIGHT, INPUT_PULLUP);
+  pinMode(TC_BTN_OK, INPUT_PULLUP);
 
   // Initialize TFT display
   tft.begin();
-  tft.setRotation(0);
+  tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
 
-  // Setup menus
-  Menu* submenu = new Menu(&tft, &mainMenu);
-  submenu->addItem("Sub Option 1");
-  submenu->addItem("Sub Option 2");
+  auto mainMenu = std::make_unique<MenuPage>(&tft);
+  auto wifiSubMenu = std::make_unique<MenuPage>(&tft, mainMenu.get());
 
-  mainMenu.addItem("Option 1", nullptr, []() {
-        Serial1.println("Lambda action works too!");
+  // Setup menus
+  wifiSubMenu->addItem("SSID", nullptr, []() {
+    std::vector<ListItem> choices = {
+        {"Apple", 101},
+        {"Banana", 102},
+        {"Orange", 103}
+    };
+    
+    PageManager::showListDialog("Pick a fruit", choices,
+      [](bool accepted, ListItem selected) {
+        delay(200);
+        if (accepted) {
+          String message = "You picked: " + selected.label + " (value = " + String(selected.value) + ")";
+          PageManager::showPopup(message.c_str());
+        } else {
+          PageManager::showPopup("Cancelled.");
+        }
     });
-  mainMenu.addItem("Option 2", submenu);
-  mainMenu.addItem("Option 3");
-  mainMenu.addItem("Option 4");
-  mainMenu.addItem("Option 5");
-  mainMenu.addItem("Option 6");
-  mainMenu.draw();
+  });
+
+
+  wifiSubMenu->addItem("Password", nullptr, []() {
+    PageManager::showInput("Enter password:", ALPHANUMERIC, [](String input, bool ok) {
+      if (ok) {
+        String message = "Password: " + input;
+        PageManager::showPopup(message.c_str());
+      } else {
+        PageManager::showPopup("Input cancelled");
+      }
+    });
+  });
+
+  
+
+  mainMenu->addItem("Option 1", nullptr, []() {
+        PageManager::showPopup("Goodbye!");
+    });
+  mainMenu->addItem("Configure Wifi", std::move(wifiSubMenu));
+  mainMenu->addItem("Option 3", nullptr, []() {
+        PageManager::showInput("Enter value:", ALPHANUMERIC, [](String input, bool ok) {
+            if (ok) {
+                Serial1.printf("Input: %s\n", input.c_str());
+            } else {
+                Serial1.println("Input cancelled");
+            }
+        });
+    });
+  mainMenu->addItem("Option 4");
+  mainMenu->addItem("Option 5");
+  mainMenu->addItem("Option 6");
+  
+
+  PageManager::pushPage(std::move(mainMenu));  // Start the UI
 
   // Initialize train display
   // trainDisplay.begin();
@@ -48,14 +94,7 @@ void setup() {
 }
 
 void loop() {
-  // uint16_t angle = readAngle(POTENTIOMETER_PIN);
-
-  // // Plot needle at the measured angle
-  // display.plotNeedle(angle, 30);
-
-  if (Menu::activeMenu) {
-    Menu::activeMenu->handleInput();
-  }
+  PageManager::handleInput();
 }
 
 int16_t readAngle(pin_size_t pin) {
