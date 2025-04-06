@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IPage.h"
-#include "config.h"
+#include "LibraryConfig.h"
 #include <TFT_eSPI.h>
 #include <Arduino.h>
 #include <vector>
@@ -10,19 +10,17 @@
 
 class DialogListPage : public IPage {
 public:
-    DialogListPage(TFT_eSPI* tft, const String& title, const std::vector<ListItem>& items,
+    DialogListPage(const String& title, const std::vector<ListItem>& items,
                    std::function<void(bool accepted, ListItem selected)> callback);
 
     void handleInput() override;
     void draw() override;
-    TFT_eSPI* getDisplay() const override;
 
 private:
     void drawItems();
     void drawButtons();
     void moveSelection(int delta);
 
-    TFT_eSPI* tft;
     String title;
     std::vector<ListItem> items;
     std::function<void(bool, ListItem)> callback;

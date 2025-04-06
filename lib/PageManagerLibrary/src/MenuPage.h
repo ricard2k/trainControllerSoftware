@@ -29,8 +29,7 @@ struct MenuItem {
 
 class MenuPage : public IPage {
 public:
-    TFT_eSPI* getDisplay() const override;
-    MenuPage(TFT_eSPI* display, MenuPage* parent = nullptr);
+    MenuPage(MenuPage* parent = nullptr);
     void addItem(String label, std::unique_ptr<MenuPage> submenu = nullptr, std::function<void()> onSelect = nullptr);
     static IPage* activePage;
     void handleInput();
@@ -39,7 +38,6 @@ public:
 private:
     std::vector<MenuItem> items;
     int selectedIndex = 0;
-    TFT_eSPI* tft;
     MenuPage* parentMenu;
     int scrollOffset = 0;
     void moveUp();

@@ -3,6 +3,8 @@
 #include "PopupPage.h"
 #include "InputPopupPage.h"
 #include "DialogListPage.h"
+#include "LoadingPage.h"
+#include "SplashPage.h"
 
 std::stack<std::unique_ptr<IPage>> PageManager::pageStack;
 
@@ -12,20 +14,14 @@ void PageManager::pushPage(std::unique_ptr<IPage> page) {
 }
 
 void PageManager::showPopup(const String& message, std::function<void()> onClose) {
-    IPage* current = currentPage();
-    if (!current) return;
-
-    auto* tft = current->getDisplay();
-    if (!tft) return;
-
-    auto popup = std::make_unique<PopupPage>(tft, message, onClose);
+    auto popup = std::make_unique<PopupPage>(message, onClose);
     pushPage(std::move(popup));
 }
 
 
 
 void PageManager::popPage() {
-    if (!pageStack.empty()) {
+    if (pageStack.size() > 1) { // Ensure at least one page remains
         pageStack.pop(); // auto-deletes
         if (!pageStack.empty()) {
             pageStack.top()->draw();
@@ -51,11 +47,7 @@ void PageManager::draw() {
 
 void PageManager::showInput(const String& prompt, InputMode mode,
     std::function<void(String, bool)> onComplete) {
-    IPage* current = currentPage();
-    if (!current) return;
-
-    TFT_eSPI* tft = current->getDisplay();
-    auto inputPage = std::make_unique<InputPopupPage>(tft, prompt, mode, onComplete);
+    auto inputPage = std::make_unique<InputPopupPage>(prompt, mode, onComplete);
     pushPage(std::move(inputPage));
 }
 
@@ -64,13 +56,34 @@ void PageManager::showListDialog(
     const std::vector<ListItem>& options,
     std::function<void(bool accepted, ListItem selected)> onResult) {
 
-    IPage* current = currentPage();
-    if (!current || options.empty()) return;
-
-    auto dialog = std::make_unique<DialogListPage>(
-        current->getDisplay(), title, options, onResult);
+    auto dialog = std::make_unique<DialogListPage>(title, options, onResult);
 
     pushPage(std::move(dialog));
+}
+
+static std::unique_ptr<LoadingPage> loadingPageInstance;
+
+void PageManager::showLoading(const String& message) {
+    loadingPageInstance = std::make_unique<LoadingPage>(message);
+    pushPage(std::move(loadingPageInstance));
+}
+
+void PageManager::hideLoading() {
+    // Assumes the loading page is topmost
+    popPage();
+    loadingPageInstance.reset();
+}
+
+void PageManager::showSplash(const uint16_t* img16Bit, int w, int h, unsigned long duration) {
+    
+    auto splash = std::make_unique<SplashPage>(img16Bit, nullptr, false, nullptr, w, h, duration);
+ 
+    pushPage(std::move(splash));
+}
+
+void PageManager::showSplash(const uint8_t* img8Bit, bool bpp8, const uint16_t* colmap, int w, int h, unsigned long duration) {
+    auto splash = std::make_unique<SplashPage>(nullptr, img8Bit, bpp8, colmap, w, h, duration);
+    pushPage(std::move(splash));
 }
 
 

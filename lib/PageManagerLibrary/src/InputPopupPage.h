@@ -1,8 +1,7 @@
 #pragma once
 
 #include "IPage.h"
-#include "config.h"
-#include <TFT_eSPI.h>
+#include "LibraryConfig.h"
 #include <Arduino.h>
 #include <vector>
 #include <functional>
@@ -14,12 +13,10 @@ enum InputMode {
 
 class InputPopupPage : public IPage {
 public:
-    InputPopupPage(TFT_eSPI* tft, const String& prompt, InputMode mode,
+    InputPopupPage(const String& prompt, InputMode mode,
                    std::function<void(String, bool)> onComplete);
-
     void handleInput() override;
     void draw() override;
-    TFT_eSPI* getDisplay() const override;
 
 private:
     void drawKeyboard();
@@ -29,7 +26,6 @@ private:
     void buildKeyboard();
     void toggleCursor();
 
-    TFT_eSPI* tft;
     String prompt;
     InputMode mode;
     String inputBuffer;
@@ -40,11 +36,11 @@ private:
     int cols = 6;
     int rows = 0;
 
-    int keyPadding = TC_SCREEN_WIDTH / 64;
-    int keyWidth = (TC_SCREEN_WIDTH - (cols + 1) * keyPadding) / cols;
-    int keyHeight = TC_SCREEN_HEIGHT / 12;
+    int keyPadding = PAGE_LIBRARY_SCREEN_WIDTH / 64;
+    int keyWidth = (PAGE_LIBRARY_SCREEN_WIDTH - (cols + 1) * keyPadding) / cols;
+    int keyHeight = PAGE_LIBRARY_SCREEN_HEIGHT / 12;
     int startX = keyPadding;
-    int startY = TC_SCREEN_HEIGHT / 2;
+    int startY = PAGE_LIBRARY_SCREEN_HEIGHT / 2;
 
     bool showCursor = true;
     unsigned long lastCursorToggle = 0;

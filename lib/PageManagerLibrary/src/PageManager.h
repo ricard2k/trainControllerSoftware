@@ -9,6 +9,10 @@
 
 class PageManager {
 public:
+    static void showSplash(const uint16_t* img16Bit, int w, int h, unsigned long duration = 3000);
+    static void showSplash(const uint8_t* img8Bit, bool bpp8, const uint16_t* colmap, int w, int h, unsigned long duration = 3000);
+    static void showLoading(const String& message);
+    static void hideLoading();
     static void showListDialog(
         const String& title,
         const std::vector<ListItem>& options,
@@ -24,5 +28,4 @@ public:
 
 private:
     static std::stack<std::unique_ptr<IPage>> pageStack;
-
 };

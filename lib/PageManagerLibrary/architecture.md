@@ -1,16 +1,14 @@
-# 🧭 UI Page Architecture for Raspberry Pi Pico W + TFT
+# UI Page Architecture for Raspberry Pi Pico W + TFT
 
 This document describes the architecture of a modular, stack-based UI system for a Raspberry Pi Pico W using a TFT display (via `TFT_eSPI`). The design is based around the concept of "pages" that encapsulate screen rendering and input logic.
 
----
 
-## 🌐 Overview
+## Overview
 
-The UI is driven by a `PageManager` that handles a stack of UI `Pages`. Each screen (menu, popup, input dialog, list dialog, etc.) implements the `IPage` interface. The user navigates using up/down/left/right buttons, and transitions between pages are handled by pushing and popping the page stack.
+The UI is driven by a `PageManager` that handles a stack of UI `Pages`. Each screen (menu, popup, input dialog, list dialog, splash screen, loading screen, etc.) implements the `IPage` interface. The user navigates using up/down/left/right buttons, and transitions between pages are handled by pushing and popping the page stack.
 
----
 
-## 🧱 Core Components
+## Core Components
 
 | Component          | Description                                                                 |
 |---------------------|-----------------------------------------------------------------------------|
@@ -21,10 +19,12 @@ The UI is driven by a `PageManager` that handles a stack of UI `Pages`. Each scr
 | `PopupPage`        | A modal page that displays a message overlay and dismisses on keypress. Optionally triggers a callback when closed. |
 | `InputPopupPage`   | A modal page that allows the user to input text or numeric values. Supports callbacks for when input is completed or canceled. |
 | `DialogListPage`   | A modal page that displays a list of selectable items. Supports callbacks for when an item is selected or the dialog is canceled. |
+| `SplashPage`       | A page that displays an image (16-bit or 8-bit) for a specified duration. Used for branding or startup screens. |
+| `LoadingPage`      | A page that displays a loading animation and optional message. Used for long-running operations. |
+| `ThreadSafeTFT`    | A utility class that encapsulates the `TFT_eSPI` object and ensures thread-safe access using a FreeRTOS semaphore. |
 
----
 
-## 🔁 Navigation Flow
+## Navigation Flow
 
 - The app starts by pushing a `MenuPage` onto the stack using `PageManager::pushPage()`.
 - Input is routed to the current page (`PageManager::handleInput()` → `IPage::handleInput()`).
@@ -33,19 +33,18 @@ The UI is driven by a `PageManager` that handles a stack of UI `Pages`. Each scr
 - `PageManager::showPopup()` displays a temporary modal message page.
 - `PageManager::showInput()` displays an input dialog for text or numeric input.
 - `PageManager::showListDialog()` displays a list dialog for selecting an item.
-- Any page can now call `getDisplay()` to pass the screen reference to a popup or dialog.
+- `PageManager::showSplash()` displays a splash screen for a specified duration.
+- `PageManager::showLoading()` displays a loading animation with an optional message.
 
----
 
-## 💡 Memory Management
+## Memory Management
 
 - Pages are created with `std::make_unique<T>()` and passed to `PageManager`.
 - `PageManager` owns and deletes pages automatically via `std::unique_ptr`.
 - Pages do not manage their own lifetime — this is centralized.
 
----
 
-## 🔄 Typical Flow
+## Typical Flow
 
 1. Start at root menu.
 2. User selects a submenu item → calls `PageManager::pushPage()`.
@@ -53,10 +52,26 @@ The UI is driven by a `PageManager` that handles a stack of UI `Pages`. Each scr
 4. Action calls `PageManager::showPopup("Done!")`.
 5. Popup dismissed → optional `onClose()` runs → returns to the previous page.
 6. For input or list dialogs, `PageManager::showInput()` or `PageManager::showListDialog()` is called, and the result is handled via callbacks.
+7. For splash screens, `PageManager::showSplash()` is called to display an image for a specified duration.
+8. For loading animations, `PageManager::showLoading()` is called to display a loading screen, and `PageManager::hideLoading()` is called to dismiss it.
 
----
 
-## 📊 Class Diagram
+## ThreadSafeTFT: Encapsulating `TFT_eSPI` for Thread Safety
+
+The `ThreadSafeTFT` class encapsulates the `TFT_eSPI` object and ensures that all interactions with it are thread-safe. This is achieved by protecting access to the `TFT_eSPI` object with a FreeRTOS semaphore.
+
+### Key Features:
+1. **Centralized Management**:
+   - The `TFT_eSPI` object is managed centrally by `ThreadSafeTFT`, ensuring consistent access across the application.
+
+2. **Thread Safety**:
+   - All interactions with the `TFT_eSPI` object are protected by a FreeRTOS semaphore, preventing race conditions in a multitasking environment.
+
+3. **Ease of Use**:
+   - The `ThreadSafeTFT::withLock()` method allows users to safely execute operations on the `TFT_eSPI` object without worrying about thread safety.
+
+
+## Class Diagram
 
 ```mermaid
 classDiagram
@@ -64,7 +79,6 @@ classDiagram
         <<interface>>
         +handleInput()
         +draw()
-        +getDisplay(): TFT_eSPI*
     }
 
     class PageManager {
@@ -77,11 +91,12 @@ classDiagram
         +showPopup(message: String, onClose: function)
         +showInput(prompt: String, mode: InputMode, onComplete: function)
         +showListDialog(title: String, options: vector<ListItem>, onResult: function)
+        +showSplash(img16Bit: uint16_t*, w: int, h: int, duration: unsigned long)
+        +showLoading(message: String)
+        +hideLoading()
     }
 
     class MenuPage {
-        -tft: TFT_eSPI*
-        -inputPins: MenuInputPins
         -items: vector<MenuItem>
         -selectedIndex: int
         -scrollOffset: int
@@ -93,7 +108,6 @@ classDiagram
         +back()
         +handleInput()
         +draw()
-        +getDisplay(): TFT_eSPI*
     }
 
     class MenuItem {
@@ -103,42 +117,69 @@ classDiagram
     }
 
     class PopupPage {
-        -tft: TFT_eSPI*
         -message: String
         -onClose: function
         +handleInput()
         +draw()
-        +getDisplay(): TFT_eSPI*
     }
 
     class InputPopupPage {
-        -tft: TFT_eSPI*
         -prompt: String
         -mode: InputMode
         -onComplete: function
         +handleInput()
         +draw()
-        +getDisplay(): TFT_eSPI*
     }
 
     class DialogListPage {
-        -tft: TFT_eSPI*
         -title: String
         -options: vector<ListItem>
         -onResult: function
         +handleInput()
         +draw()
-        +getDisplay(): TFT_eSPI*
+    }
+
+    class SplashPage {
+        -img16Bit: uint16_t*
+        -img8Bit: uint8_t*
+        -colmap: uint16_t*
+        -bpp8: bool
+        -w: int
+        -h: int
+        -duration: unsigned long
+        +handleInput()
+        +draw()
+    }
+
+    class LoadingPage {
+        -message: String
+        -angle: int
+        -lastFrame: unsigned long
+        -frameInterval: unsigned long
+        +handleInput()
+        +draw()
+    }
+
+    class ThreadSafeTFT {
+        -tft: TFT_eSPI*
+        -mutex: SemaphoreHandle_t
+        +init(tftInstance: TFT_eSPI*)
+        +withLock(action: function<void(TFT_eSPI&)>)
     }
 
     IPage <|.. MenuPage
     IPage <|.. PopupPage
     IPage <|.. InputPopupPage
     IPage <|.. DialogListPage
+    IPage <|.. SplashPage
+    IPage <|.. LoadingPage
     PageManager --> IPage : manages
     MenuPage --> MenuItem : has
     MenuItem --> MenuPage : owns submenu
-    MenuPage --> TFT_eSPI
-    PopupPage --> TFT_eSPI
-    InputPopupPage --> TFT_eSPI
-    DialogListPage --> TFT_eSPI
+    ThreadSafeTFT --> TFT_eSPI : encapsulates
+    MenuPage --> ThreadSafeTFT : uses
+    PopupPage --> ThreadSafeTFT : uses
+    InputPopupPage --> ThreadSafeTFT : uses
+    DialogListPage --> ThreadSafeTFT : uses
+    SplashPage --> ThreadSafeTFT : uses
+    LoadingPage --> ThreadSafeTFT : uses
