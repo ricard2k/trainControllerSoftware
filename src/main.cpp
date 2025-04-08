@@ -9,7 +9,7 @@ void setup() {
 
 
   // Initialize the UI
-  uiManager.init();
+  uiManager.begin();
 
   // Start the UI task
   uiManager.startTask();

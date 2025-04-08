@@ -65,6 +65,6 @@ void LoadingPage::animationTask(void* param) {
     
 }
 
-void LoadingPage::handleInput() {
+void LoadingPage::handleInput(IKeyboard* keyboard) {
     // Ignore input
 }

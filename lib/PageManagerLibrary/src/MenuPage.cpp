@@ -101,25 +101,26 @@ void MenuPage::draw()
   }
 }
 
-void MenuPage::handleInput()
+void MenuPage::handleInput(IKeyboard* keyboard)
 {
-  if (digitalRead(PAGE_LIBRARY_BTN_UP) == LOW)
+  uint16_t pressedKeys = keyboard->getPressedKeys();
+  if (pressedKeys & KEY_UP)
   {
     moveUp();
     delay(200);
   }
-  else if (digitalRead(PAGE_LIBRARY_BTN_DOWN) == LOW)
+  else if (pressedKeys & KEY_DOWN)
   {
     moveDown();
     delay(200);
   }
-  else if ((digitalRead(PAGE_LIBRARY_BTN_RIGHT) == LOW) ||
-           (digitalRead(PAGE_LIBRARY_BTN_OK) == LOW))
+  else if ((pressedKeys & KEY_RIGHT) ||
+           (pressedKeys & KEY_OK))
     {
       enter();
       delay(200);
     }
-  else if (digitalRead(PAGE_LIBRARY_BTN_LEFT) == LOW)
+  else if (pressedKeys & KEY_LEFT)
   {
     back();
     delay(200);

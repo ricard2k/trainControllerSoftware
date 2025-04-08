@@ -20,7 +20,7 @@ void SplashPage::draw() {
     });
 }
 
-void SplashPage::handleInput() {
+void SplashPage::handleInput(IKeyboard* keyboard) {
     if (millis() - startTime > duration) {
         PageManager::popPage();
     }

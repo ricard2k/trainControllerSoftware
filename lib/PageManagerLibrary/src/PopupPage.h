@@ -7,7 +7,7 @@ class PopupPage : public IPage {
 public:
     PopupPage(String message, std::function<void()> onClose = nullptr);
 
-    void handleInput() override;
+    void handleInput(IKeyboard* keyboard) override;
     void draw() override;
 
 private:

@@ -23,7 +23,7 @@ public:
     static void pushPage(std::unique_ptr<IPage> page);
     static void popPage();
     static IPage* currentPage();
-    static void handleInput();
+    static void handleInput(IKeyboard* keyboard);
     static void draw();
 
 private:

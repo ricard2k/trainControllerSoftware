@@ -15,7 +15,7 @@ class InputPopupPage : public IPage {
 public:
     InputPopupPage(const String& prompt, InputMode mode,
                    std::function<void(String, bool)> onComplete);
-    void handleInput() override;
+    void handleInput(IKeyboard* keyboard) override;
     void draw() override;
 
 private:

@@ -13,7 +13,7 @@ public:
     DialogListPage(const String& title, const std::vector<ListItem>& items,
                    std::function<void(bool accepted, ListItem selected)> callback);
 
-    void handleInput() override;
+    void handleInput(IKeyboard* keyboard) override;
     void draw() override;
 
 private:

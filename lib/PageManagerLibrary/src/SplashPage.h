@@ -7,7 +7,7 @@ class SplashPage : public IPage {
 public:
     SplashPage(const uint16_t* img16bit, const uint8_t* img8bit, bool bpp8, const uint16_t* colmap, int w, int h, unsigned long durationMs);
 
-    void handleInput() override;
+    void handleInput(IKeyboard* keyboard) override;
     void draw() override;
 
 

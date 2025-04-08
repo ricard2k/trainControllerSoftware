@@ -162,30 +162,31 @@ void InputPopupPage::handleKeyPress()
   draw();
 }
 
-void InputPopupPage::handleInput()
+void InputPopupPage::handleInput(IKeyboard* keyboard)
 {
+  uint16_t pressedKeys = keyboard->getPressedKeys();
   toggleCursor();
-  if (digitalRead(PAGE_LIBRARY_BTN_UP) == LOW)
+  if (pressedKeys & KEY_UP)
   {
     moveSelection(0, -1);
     delay(200);
   }
-  else if (digitalRead(PAGE_LIBRARY_BTN_DOWN) == LOW)
+  else if (pressedKeys & KEY_DOWN)
   {
     moveSelection(0, 1);
     delay(200);
   }
-  else if (digitalRead(PAGE_LIBRARY_BTN_LEFT) == LOW)
+  else if (pressedKeys & KEY_LEFT)
   {
     moveSelection(-1, 0);
     delay(200);
   }
-  else if (digitalRead(PAGE_LIBRARY_BTN_RIGHT) == LOW)
+  else if (pressedKeys & KEY_RIGHT)
   {
     moveSelection(1, 0);
     delay(200);
   }
-  else if (digitalRead(PAGE_LIBRARY_BTN_OK) == LOW)
+  else if (pressedKeys & KEY_OK)
   {
     handleKeyPress();
     delay(200);

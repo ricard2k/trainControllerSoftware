@@ -4,6 +4,7 @@
 #include <MenuPage.h>
 #include <ThreadSafeTFT.h>
 #include "Config.h"
+#include "AnalogKeyboard.h"
 
 UIManager::UIManager() : tft(), uiTaskHandle(nullptr) {}
 
@@ -13,14 +14,13 @@ UIManager::~UIManager() {
     }
 }
 
-void UIManager::init() {
+void UIManager::begin() {
 
-    pinMode(POTENTIOMETER_PIN, INPUT);
-    pinMode(PAGE_LIBRARY_BTN_UP, INPUT_PULLUP);
-    pinMode(PAGE_LIBRARY_BTN_DOWN, INPUT_PULLUP);
-    pinMode(PAGE_LIBRARY_BTN_LEFT, INPUT_PULLUP);
-    pinMode(PAGE_LIBRARY_BTN_RIGHT, INPUT_PULLUP);
-    pinMode(PAGE_LIBRARY_BTN_OK, INPUT_PULLUP);
+    //create an instance of keyboard
+    keyboard = new AnalogKeyboard(A0);
+    
+    // Create an instance of AnalogSwitch
+    analogSwitch = new AnalogSwitch(D14, D15, D16);
 
     // Initialize the TFT display
     tft.begin();
@@ -53,7 +53,8 @@ void UIManager::uiTask(void* param) {
 
     while (true) {
         // Handle input and draw the current page
-        PageManager::handleInput();
+        self->analogSwitch->switchTo(0); // Switch to channel 0
+        PageManager::handleInput(self->keyboard);
     }
 }
 

@@ -5,6 +5,7 @@
 #include "DialogListPage.h"
 #include "LoadingPage.h"
 #include "SplashPage.h"
+#include "IKeyboard.h"
 
 std::stack<std::unique_ptr<IPage>> PageManager::pageStack;
 
@@ -33,9 +34,9 @@ IPage* PageManager::currentPage() {
     return pageStack.empty() ? nullptr : pageStack.top().get();
 }
 
-void PageManager::handleInput() {
+void PageManager::handleInput(IKeyboard* keyboard) {
     if (!pageStack.empty()) {
-        pageStack.top()->handleInput();
+        pageStack.top()->handleInput(keyboard);
     }
 }
 

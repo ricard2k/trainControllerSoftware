@@ -20,11 +20,12 @@ void PopupPage::draw() {
     });
 }
 
-void PopupPage::handleInput() {
+void PopupPage::handleInput(IKeyboard* keyboard) {
     // Dismiss on any button press
-    if (digitalRead(2) == LOW || digitalRead(PAGE_LIBRARY_BTN_LEFT) == LOW ||
-        digitalRead(4) == LOW || digitalRead(PAGE_LIBRARY_BTN_RIGHT) == LOW ||
-        digitalRead(PAGE_LIBRARY_BTN_OK) == LOW) {
+    uint16_t pressedKeys = keyboard->getPressedKeys();
+    if ((pressedKeys & KEY_LEFT) ||
+        (pressedKeys & KEY_RIGHT) ||
+        (pressedKeys & KEY_OK)) {
         PageManager::popPage();
         if (onClose) onClose();
         delay(200);  // debounce

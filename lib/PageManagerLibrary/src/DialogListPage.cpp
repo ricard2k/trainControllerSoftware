@@ -66,24 +66,25 @@ void DialogListPage::moveSelection(int delta) {
     draw();
 }
 
-void DialogListPage::handleInput() {
-    if (digitalRead(PAGE_LIBRARY_BTN_UP) == LOW) {
+void DialogListPage::handleInput(IKeyboard* keyboard) {
+    uint16_t pressedKeys = keyboard->getPressedKeys();
+    if (pressedKeys & KEY_UP) {
         if (!focusOnButtons) moveSelection(-1);
         delay(200);
-    } else if (digitalRead(PAGE_LIBRARY_BTN_DOWN) == LOW) {
+    } else if (pressedKeys & KEY_DOWN) {
         if (!focusOnButtons) moveSelection(1);
         delay(200);
-    } else if (digitalRead(PAGE_LIBRARY_BTN_LEFT) == LOW) {
+    } else if (pressedKeys & KEY_LEFT) {
         if (focusOnButtons) moveSelection(-1); 
         else focusOnButtons = true;
         draw();
         delay(200);
-    } else if (digitalRead(PAGE_LIBRARY_BTN_RIGHT) == LOW) {
+    } else if (pressedKeys & KEY_RIGHT) {
         if (focusOnButtons) moveSelection(1);
         else focusOnButtons = true;
         draw();
         delay(200);
-    } else if (digitalRead(PAGE_LIBRARY_BTN_OK) == LOW) {
+    } else if (pressedKeys & KEY_OK) {
         if (focusOnButtons) {
             bool accepted = selectedButton == 0;
             PageManager::popPage();

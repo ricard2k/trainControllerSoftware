@@ -32,7 +32,7 @@ public:
     MenuPage(MenuPage* parent = nullptr);
     void addItem(String label, std::unique_ptr<MenuPage> submenu = nullptr, std::function<void()> onSelect = nullptr);
     static IPage* activePage;
-    void handleInput();
+    void handleInput(IKeyboard* keyboard);
     void draw();
 
 private:

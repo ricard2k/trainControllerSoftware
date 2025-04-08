@@ -11,7 +11,7 @@ public:
     LoadingPage(const String& message);
     ~LoadingPage(); // needed to clean up the task
 
-    void handleInput() override;
+    void handleInput(IKeyboard* keyboard) override;
     void draw() override;
     void stop(); // signal task to terminate
 
