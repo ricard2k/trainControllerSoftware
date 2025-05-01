@@ -71,8 +71,8 @@ void WiFiConfigManager::saveNetworkProperties(const NetworkProperties& propertie
         return; // Failed to open file
     }
 
-    // Allocate a JSON document
-    StaticJsonDocument<512> doc; // Adjust size as needed
+    // Create a JSON document with appropriate capacity
+    JsonDocument doc;
 
     // Populate the JSON document
     doc["ssid"] = properties.ssid;
@@ -99,8 +99,8 @@ WiFiConfigManager::NetworkProperties WiFiConfigManager::loadNetworkProperties() 
         return properties; // Failed to open file
     }
 
-    // Allocate a JSON document
-    StaticJsonDocument<512> doc; // Adjust size as needed
+    // Create a JSON document
+    JsonDocument doc;
 
     // Parse the JSON file
     DeserializationError error = deserializeJson(doc, file);
@@ -130,9 +130,9 @@ void WiFiConfigManager::startNetwork() {
     } else {
         WiFi.config(
             IPAddress().fromString(properties.ip),
+            IPAddress().fromString(properties.dns),
             IPAddress().fromString(properties.router),
-            IPAddress().fromString(properties.mask),
-            IPAddress().fromString(properties.dns)
+            IPAddress().fromString(properties.mask) 
         );
         WiFi.begin(properties.ssid.c_str(), properties.password.c_str());
     }

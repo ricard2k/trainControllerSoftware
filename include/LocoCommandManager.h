@@ -59,5 +59,3 @@ protected:
     virtual void sendBellCommand(bool active) = 0;
     virtual void sendHornCommand(bool active) = 0;
 };
-
-#endif // LOCO_COMMAND_MANAGER_H

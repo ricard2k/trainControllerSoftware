@@ -1,4 +1,3 @@
-// InputPopupPage.cpp
 #include "InputPopupPage.h"
 #include "PageManager.h"
 #include "ThreadSafeTFT.h"
@@ -18,7 +17,12 @@ void InputPopupPage::buildKeyboard()
     keys = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "<", "OK", "Cancel"};
     cols = 3;
   }
-  else
+  else if (mode == NUMERIC_IP)
+  {
+    keys = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ".", "<", "OK", "Cancel"};
+    cols = 5;  // 5 columns for a more compact layout
+  }
+  else // ALPHANUMERIC
   {
     for (char c = 'A'; c <= 'Z'; ++c)
       keys.push_back(String(c));
@@ -30,6 +34,7 @@ void InputPopupPage::buildKeyboard()
     keys.push_back("Cancel");
     cols = 8;
   }
+  
   keyWidth = (PAGE_LIBRARY_SCREEN_WIDTH - (cols + 1) * keyPadding) / cols;
   rows = (keys.size() + cols - 1) / cols;
   keyHeight = (PAGE_LIBRARY_SCREEN_HEIGHT - startY - keyPadding * (rows + 1)) / rows;
@@ -143,6 +148,19 @@ void InputPopupPage::handleKeyPress()
   }
   else if (key == "OK")
   {
+    // For IP addresses, validate before accepting
+    if (mode == NUMERIC_IP && !isValidIPAddress(inputBuffer))
+    {
+      // Show error message
+      ThreadSafeTFT::withLock([](TFT_eSPI& tft) {
+        tft.setTextColor(TFT_RED, TFT_BLACK);
+        tft.drawString("Invalid IP format", 10, 100, 2);
+      });
+      delay(1500); // Show error for 1.5 seconds
+      draw(); // Redraw to clear error
+      return;
+    }
+    
     PageManager::popPage();
     if (onComplete)
       onComplete(inputBuffer, true);
@@ -154,6 +172,44 @@ void InputPopupPage::handleKeyPress()
     if (onComplete)
       onComplete("", false);
     return;
+  }
+  else if (mode == NUMERIC_IP)
+  {
+    // Special handling for IP address input
+    if (key == ".")
+    {
+      // Don't allow consecutive dots
+      if (inputBuffer.isEmpty() || inputBuffer.endsWith("."))
+        return;
+        
+      // Count existing dots to ensure we don't exceed 3
+      int dotCount = 0;
+      for (unsigned int i = 0; i < inputBuffer.length(); i++) {
+        if (inputBuffer.charAt(i) == '.')
+          dotCount++;
+      }
+      
+      if (dotCount >= 3)
+        return; // Already have 3 dots (xxx.xxx.xxx.xxx)
+        
+      inputBuffer += key;
+    }
+    else // Number key
+    {
+      // Check current octet value
+      int lastDotPos = inputBuffer.lastIndexOf('.');
+      String currentOctet = lastDotPos >= 0 ? 
+                           inputBuffer.substring(lastDotPos + 1) : 
+                           inputBuffer;
+                           
+      // Determine value if new digit is added
+      String newOctet = currentOctet + key;
+      int newValue = newOctet.toInt();
+      
+      // Only add digit if octet remains valid (0-255)
+      if (newValue >= 0 && newValue <= 255 && newOctet.length() <= 3)
+        inputBuffer += key;
+    }
   }
   else
   {
@@ -191,4 +247,47 @@ void InputPopupPage::handleInput(IKeyboard* keyboard)
     handleKeyPress();
     delay(200);
   }
+}
+
+// Check if the input string is a valid IP address
+bool InputPopupPage::isValidIPAddress(const String& ip)
+{
+  // Check if empty
+  if (ip.isEmpty())
+    return false;
+    
+  // IP must have exactly 3 dots
+  int dotCount = 0;
+  for (unsigned int i = 0; i < ip.length(); i++) {
+    if (ip.charAt(i) == '.')
+      dotCount++;
+  }
+  
+  if (dotCount != 3)
+    return false;
+    
+  // Split into octets and validate each one
+  int lastPos = 0;
+  for (int i = 0; i < 4; i++) {
+    int pos = (i < 3) ? ip.indexOf('.', lastPos) : ip.length();
+    
+    // Check if we have data between dots
+    if (pos <= lastPos)
+      return false;
+      
+    String octet = ip.substring(lastPos, pos);
+    
+    // Check if octet is a valid number between 0 and 255
+    int value = octet.toInt();
+    if (value < 0 || value > 255)
+      return false;
+      
+    // Avoid leading zeros (except for 0 itself)
+    if (octet != "0" && octet.charAt(0) == '0')
+      return false;
+      
+    lastPos = pos + 1;
+  }
+  
+  return true;
 }

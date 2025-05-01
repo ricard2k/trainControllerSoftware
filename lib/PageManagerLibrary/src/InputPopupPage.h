@@ -8,7 +8,8 @@
 
 enum InputMode {
     NUMERIC,
-    ALPHANUMERIC
+    ALPHANUMERIC,
+    NUMERIC_IP
 };
 
 class InputPopupPage : public IPage {

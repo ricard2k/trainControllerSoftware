@@ -2,6 +2,8 @@
 
 #include <Arduino.h> // For Arduino's String class
 #include <functional>
+#include <FreeRTOS.h> // Include FreeRTOS header for TaskHandle_t
+#include <task.h>     // Include FreeRTOS task header
 
 class WiFiConfigManager {
 public:

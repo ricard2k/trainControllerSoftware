@@ -20,5 +20,3 @@ protected:
 private:
     String lightStatusToString(LightStatus status);
 };
-
-#endif // DCC_COMMAND_MANAGER_H
