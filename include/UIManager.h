@@ -6,6 +6,7 @@
 #include <task.h>
 #include "IKeyboard.h"
 #include "AnalogSwitch.h"
+#include "WiFiConfigManager.h"
 
 class UIManager {
 public:
@@ -23,4 +24,5 @@ private:
     TaskHandle_t uiTaskHandle; // Handle for the UI task
     IKeyboard* keyboard; // Pointer to the keyboard interface
     AnalogSwitch* analogSwitch; // Analog switch for channel selection
+    WiFiConfigManager* wifiManager; // Pointer to the WiFi configuration manager
 };

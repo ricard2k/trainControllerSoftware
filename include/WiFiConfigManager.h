@@ -16,6 +16,17 @@ public:
         bool dhcp = true; // Default to DHCP
     };
 
+    // Connection information structure
+    struct ConnectionInfo {
+        String ip;
+        String subnet;
+        String gateway;
+        String dns;
+        String ssid;
+        int32_t rssi;
+        String macAddress;
+    };
+
     // Constructor and destructor
     WiFiConfigManager(const String& configFilePath);
     ~WiFiConfigManager();
@@ -37,6 +48,12 @@ public:
 
     // Stop the network connection
     void stopNetwork();
+
+    // Check if the device is connected to a network
+    bool isConnected();
+
+    // Get connection information
+    ConnectionInfo getConnectionInfo();
 
 private:
     String configFilePath;

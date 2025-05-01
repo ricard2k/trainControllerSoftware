@@ -141,3 +141,34 @@ void WiFiConfigManager::startNetwork() {
 void WiFiConfigManager::stopNetwork() {
     WiFi.disconnect();
 }
+
+bool WiFiConfigManager::isConnected() {
+    return WiFi.status() == WL_CONNECTED;
+}
+
+WiFiConfigManager::ConnectionInfo WiFiConfigManager::getConnectionInfo() {
+    ConnectionInfo info;
+    
+    // Only fill in data if we're connected
+    if (isConnected()) {
+        info.ip = WiFi.localIP().toString();
+        info.subnet = WiFi.subnetMask().toString();
+        info.gateway = WiFi.gatewayIP().toString();
+        info.dns = WiFi.dnsIP().toString();
+        info.ssid = WiFi.SSID();
+        info.rssi = WiFi.RSSI();
+        info.macAddress = WiFi.macAddress();
+    } else {
+        // Fill with empty values or "Not Connected"
+        info.ip = "Not Connected";
+        info.subnet = "Not Connected";
+        info.gateway = "Not Connected";
+        info.dns = "Not Connected";
+        info.ssid = "Not Connected";
+        info.rssi = 0;
+        info.macAddress = WiFi.macAddress(); // MAC is available even when disconnected
+    }
+    
+    return info;
+}
+

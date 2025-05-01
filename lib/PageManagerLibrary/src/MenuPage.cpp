@@ -7,6 +7,19 @@
 MenuItem::MenuItem(String l, std::unique_ptr<MenuPage> sub, std::function<void()> cb)
     : label(l), submenu(std::move(sub)), onSelect(cb) {}
 
+std::unique_ptr<MenuPage> MenuItem::cloneSubmenu() const {
+  if (!submenu) return nullptr;
+  
+  auto clone = std::make_unique<MenuPage>(nullptr);
+  
+  // Copy all the items
+  for (const auto& item : submenu->items) {
+      clone->addItem(item.label, item.cloneSubmenu(), item.onSelect);
+  }
+  
+  return clone;
+}
+
 MenuPage::MenuPage(MenuPage *parent)
     : parentMenu(parent) {}
 
@@ -46,7 +59,9 @@ void MenuPage::enter()
   MenuItem &item = items[selectedIndex];
   if (item.submenu)
   {
-    PageManager::pushPage(std::move(item.submenu));
+    // Clone the submenu structure instead of moving it
+    auto submenuClone = item.cloneSubmenu();
+    PageManager::pushPage(std::move(submenuClone));
   }
   else if (item.onSelect)
   {

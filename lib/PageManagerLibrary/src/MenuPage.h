@@ -25,9 +25,12 @@ struct MenuItem {
 
     MenuItem(String l, std::unique_ptr<MenuPage> sub = nullptr, std::function<void()> onSelect = nullptr);
 
+    std::unique_ptr<MenuPage> cloneSubmenu() const;
+
 };
 
 class MenuPage : public IPage {
+    friend class MenuItem;
 public:
     MenuPage(MenuPage* parent = nullptr);
     void addItem(String label, std::unique_ptr<MenuPage> submenu = nullptr, std::function<void()> onSelect = nullptr);
