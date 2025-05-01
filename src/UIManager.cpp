@@ -4,7 +4,7 @@
 #include <MenuPage.h>
 #include <ThreadSafeTFT.h>
 #include "Config.h"
-#include "AnalogKeyboard.h"
+#include "MatrixKeyboard.h"
 
 UIManager::UIManager() : tft(), uiTaskHandle(nullptr), wifiManager(nullptr) {}
 
@@ -20,7 +20,9 @@ UIManager::~UIManager() {
 void UIManager::begin() {
 
     //create an instance of keyboard
-    keyboard = new AnalogKeyboard(A0);
+    static constexpr uint8_t rowPins[] = {D15, D16};
+    static constexpr uint8_t colPins[] = {D17, D18, D19};
+    keyboard = new MatrixKeyboard(rowPins, colPins, D22);
     
     // Create an instance of AnalogSwitch
     analogSwitch = new AnalogSwitch(D14, D15, D16);
