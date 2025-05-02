@@ -50,18 +50,35 @@ void WiFiConfigManager::scanTask(void* parameter) {
     }
 
     while (true) {
+        // Check if scanning was canceled
+        if (!instance->scanning) {
+            delete param; // Clean up the parameter
+            vTaskDelete(nullptr); // End the task
+            return;
+        }
+        
+        // Get the number of networks found
+        int numNetworks = WiFi.scanNetworks();
+        
+        // Iterate through all found networks
+        for (int i = 0; i < numNetworks; i++) {
+            // Check again in case scanning was stopped during iteration
             if (!instance->scanning) {
-                delete param; // Clean up the parameter
-            if (!instance->scanning) {
-                delete onSSIDFound; // Clean up the callback
+                WiFi.scanDelete(); // Clean up scan results
+                delete param;      // Clean up the parameter
                 vTaskDelete(nullptr); // End the task
+                return;
             }
-
-            // Call the callback with the SSID
+            
+            // Call the callback with each SSID found
             (*onSSIDFound)(WiFi.SSID(i));
         }
-
-        vTaskDelay(pdMS_TO_TICKS(5000)); // Wait before rescanning
+        
+        // Delete the scan results to free memory
+        WiFi.scanDelete();
+        
+        // Wait before rescanning
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }
 
