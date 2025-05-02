@@ -19,6 +19,7 @@ public:
 private:
     static void uiTask(void* param); // FreeRTOS task function
     void setupMenus();               // Setup the menus
+    void setupLocoDriverPage();
 
     TFT_eSPI tft;          // Encapsulated TFT display object
     TaskHandle_t uiTaskHandle; // Handle for the UI task

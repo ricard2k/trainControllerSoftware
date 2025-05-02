@@ -5,6 +5,8 @@
 #include <ThreadSafeTFT.h>
 #include "Config.h"
 #include "MatrixKeyboard.h"
+#include "GaugePage.h"
+#include "LocoDriverPage.h"
 
 UIManager::UIManager() : tft(), uiTaskHandle(nullptr), wifiManager(nullptr) {}
 
@@ -286,4 +288,9 @@ void UIManager::setupMenus() {
 
     // Push the main menu to the PageManager
     PageManager::pushPage(std::move(mainMenu));
+}
+
+void UIManager::setupLocoDriverPagee() {
+    auto locoDriverPage = std::make_unique<LocoDriverPage>(locoManager);
+    PageManager::pushPage(std::move(locoDriverPage));
 }
