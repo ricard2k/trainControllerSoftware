@@ -26,6 +26,7 @@ private:
     void moveSelection(int dx, int dy);
     void buildKeyboard();
     void toggleCursor();
+    bool isValidIPAddress(const String& ip);
 
     String prompt;
     InputMode mode;

@@ -3,10 +3,11 @@
 #include <IPage.h>
 #include <Arduino.h>
 #include "LocoCommandManager.h"
+#include "DCCCommandManager.h" // Include for the singleton access
 
 class LocoDriverPage : public IPage {
 private:
-    LocoCommandManager* locoManager;
+    LocoCommandManager& locoManager; // Reference instead of pointer
     
     // Current values
     int currentSpeed = 0;
@@ -26,7 +27,12 @@ private:
     void drawGaugeLabels(TFT_eSPI& tft, int centerX, int centerY, int maxValue, int radius);
 
 public:
-    LocoDriverPage(LocoCommandManager* manager);
+    // Modified constructor to accept reference to LocoCommandManager
+    LocoDriverPage(LocoCommandManager& manager);
+    
+    // Default constructor that uses DCCCommandManager singleton
+    LocoDriverPage() : LocoDriverPage(DCCCommandManager::getInstance()) {}
+    
     void draw() override;
     void handleInput(IKeyboard* keyboard) override;
     

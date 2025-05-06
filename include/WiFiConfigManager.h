@@ -7,6 +7,18 @@
 
 class WiFiConfigManager {
 public:
+    // Get the singleton instance
+    static WiFiConfigManager& getInstance(const String& configFilePath = "") {
+        static WiFiConfigManager instance(configFilePath);
+        return instance;
+    }
+
+    // Delete copy/move constructors and assignment operators
+    WiFiConfigManager(const WiFiConfigManager&) = delete;
+    WiFiConfigManager& operator=(const WiFiConfigManager&) = delete;
+    WiFiConfigManager(WiFiConfigManager&&) = delete;
+    WiFiConfigManager& operator=(WiFiConfigManager&&) = delete;
+
     // Network properties structure
     struct NetworkProperties {
         String ssid;
@@ -29,8 +41,6 @@ public:
         String macAddress;
     };
 
-    // Constructor and destructor
-    WiFiConfigManager(const String& configFilePath);
     ~WiFiConfigManager();
 
     // Start scanning for SSIDs
@@ -58,6 +68,9 @@ public:
     ConnectionInfo getConnectionInfo();
 
 private:
+    // Private constructor for singleton pattern
+    WiFiConfigManager(const String& configFilePath);
+    
     String configFilePath;
     bool scanning = false;
     TaskHandle_t scanTaskHandle = nullptr; // Handle for the FreeRTOS task

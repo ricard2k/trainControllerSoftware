@@ -13,6 +13,12 @@ public:
         DITCHES
     };
 
+    // Delete copy/move constructors and assignment operators to prevent duplication
+    LocoCommandManager(const LocoCommandManager&) = delete;
+    LocoCommandManager& operator=(const LocoCommandManager&) = delete;
+    LocoCommandManager(LocoCommandManager&&) = delete;
+    LocoCommandManager& operator=(LocoCommandManager&&) = delete;
+
     virtual ~LocoCommandManager() {}
 
     // Initialize the system
@@ -43,6 +49,9 @@ public:
     void setHorn(bool active);
 
 protected:
+    // Protected constructor for singleton pattern
+    LocoCommandManager() {}
+
     // State variables to track the last sent values
     std::optional<int> lastSpeed;
     std::optional<int> lastBrake;

@@ -5,18 +5,16 @@
 #include <ThreadSafeTFT.h>
 #include "Config.h"
 #include "MatrixKeyboard.h"
-#include "GaugePage.h"
 #include "LocoDriverPage.h"
+#include "DCCCommandManager.h" // Add the DCCCommandManager include for singleton access
 
-UIManager::UIManager() : tft(), uiTaskHandle(nullptr), wifiManager(nullptr) {}
+UIManager::UIManager() : tft(), uiTaskHandle(nullptr) {}
 
 UIManager::~UIManager() {
     if (uiTaskHandle) {
         vTaskDelete(uiTaskHandle);
     }
-    if (wifiManager) {
-        delete wifiManager;
-    }
+    // No need to delete wifiManager as it's now a singleton
 }
 
 void UIManager::begin() {
@@ -29,9 +27,9 @@ void UIManager::begin() {
     // Create an instance of AnalogSwitch
     analogSwitch = new AnalogSwitch(D14, D15, D16);
     
-    // Create WiFiConfigManager
-    wifiManager = new WiFiConfigManager("/wifi_config.json");
-
+    // Initialize the WiFiConfigManager singleton with config path
+    WiFiConfigManager::getInstance("/wifi_config.json");
+    
     // Initialize the TFT display
     tft.begin();
     tft.setRotation(1);
@@ -80,8 +78,8 @@ void UIManager::setupMenus() {
         // Vector to store discovered SSIDs
         std::vector<ListItem> networks;
         
-        // Start scanning for SSIDs
-        wifiManager->startSSIDScan([&networks](const String& ssid) {
+        // Start scanning for SSIDs using singleton
+        WiFiConfigManager::getInstance().startSSIDScan([&networks](const String& ssid) {
             // Check if SSID is already in the list to avoid duplicates
             bool isDuplicate = false;
             for (const auto& network : networks) {
@@ -100,28 +98,28 @@ void UIManager::setupMenus() {
         delay(5000);
         
         // Stop scanning
-        wifiManager->stopSSIDScan();
+        WiFiConfigManager::getInstance().stopSSIDScan();
         PageManager::hideLoading();
         
         // Show list dialog with discovered networks
         PageManager::showListDialog("Select WiFi Network", networks,
-            [this](bool accepted, ListItem selected) {
+            [](bool accepted, ListItem selected) {
                 if (accepted) {
                     // Load current properties to update just the SSID
-                    WiFiConfigManager::NetworkProperties properties = wifiManager->loadNetworkProperties();
+                    WiFiConfigManager::NetworkProperties properties = WiFiConfigManager::getInstance().loadNetworkProperties();
                     properties.ssid = selected.label;
                     
                     // Save the updated properties
-                    wifiManager->saveNetworkProperties(properties);
+                    WiFiConfigManager::getInstance().saveNetworkProperties(properties);
                     
                     // Ask for password
                     PageManager::showInput("Enter password for " + selected.label + ":", 
-                        ALPHANUMERIC, [this, properties](String input, bool ok) {
+                        ALPHANUMERIC, [properties](String input, bool ok) {
                             if (ok) {
                                 // Update properties with password
                                 WiFiConfigManager::NetworkProperties updatedProps = properties;
                                 updatedProps.password = input;
-                                wifiManager->saveNetworkProperties(updatedProps);
+                                WiFiConfigManager::getInstance().saveNetworkProperties(updatedProps);
                                 PageManager::showPopup("WiFi credentials saved!");
                             }
                         });
@@ -129,63 +127,64 @@ void UIManager::setupMenus() {
             });
     });
 
-    wifiSubMenu->addItem("Network Settings", nullptr, [this]() {
+    wifiSubMenu->addItem("Network Settings", nullptr, []() {
         auto networkSettingsMenu = std::make_unique<MenuPage>();
-        WiFiConfigManager::NetworkProperties props = wifiManager->loadNetworkProperties();
+        WiFiConfigManager::NetworkProperties props = WiFiConfigManager::getInstance().loadNetworkProperties();
         
         // DHCP toggle option
-        networkSettingsMenu->addItem(props.dhcp ? "DHCP: On" : "DHCP: Off", nullptr, [this]() {
-            WiFiConfigManager::NetworkProperties props = wifiManager->loadNetworkProperties();
+        networkSettingsMenu->addItem(props.dhcp ? "DHCP: On" : "DHCP: Off", nullptr, []() {
+            WiFiConfigManager::NetworkProperties props = WiFiConfigManager::getInstance().loadNetworkProperties();
             props.dhcp = !props.dhcp;
-            wifiManager->saveNetworkProperties(props);
+            WiFiConfigManager::getInstance().saveNetworkProperties(props);
             PageManager::showPopup(props.dhcp ? "DHCP enabled" : "DHCP disabled");
             PageManager::popPage(); // Return to previous menu
-            setupMenus();  // Refresh menu to show updated state
+            // Need different approach to refresh menu
+            // Previously: setupMenus(); // Refresh menu to show updated state
         });
         
         // IP Address setting
-        networkSettingsMenu->addItem("IP Address: " + props.ip, nullptr, [this]() {
-            PageManager::showInput("Enter IP Address:", NUMERIC_IP, [this](String input, bool ok) {
+        networkSettingsMenu->addItem("IP Address: " + props.ip, nullptr, []() {
+            PageManager::showInput("Enter IP Address:", NUMERIC_IP, [](String input, bool ok) {
                 if (ok) {
-                    WiFiConfigManager::NetworkProperties props = wifiManager->loadNetworkProperties();
+                    WiFiConfigManager::NetworkProperties props = WiFiConfigManager::getInstance().loadNetworkProperties();
                     props.ip = input;
-                    wifiManager->saveNetworkProperties(props);
+                    WiFiConfigManager::getInstance().saveNetworkProperties(props);
                     PageManager::showPopup("IP Address saved");
                 }
             });
         });
         
         // Subnet Mask
-        networkSettingsMenu->addItem("Subnet Mask: " + props.mask, nullptr, [this]() {
-            PageManager::showInput("Enter Subnet Mask:", NUMERIC_IP, [this](String input, bool ok) {
+        networkSettingsMenu->addItem("Subnet Mask: " + props.mask, nullptr, []() {
+            PageManager::showInput("Enter Subnet Mask:", NUMERIC_IP, [](String input, bool ok) {
                 if (ok) {
-                    WiFiConfigManager::NetworkProperties props = wifiManager->loadNetworkProperties();
+                    WiFiConfigManager::NetworkProperties props = WiFiConfigManager::getInstance().loadNetworkProperties();
                     props.mask = input;
-                    wifiManager->saveNetworkProperties(props);
+                    WiFiConfigManager::getInstance().saveNetworkProperties(props);
                     PageManager::showPopup("Subnet Mask saved");
                 }
             });
         });
         
         // Gateway/Router
-        networkSettingsMenu->addItem("Gateway: " + props.router, nullptr, [this]() {
-            PageManager::showInput("Enter Gateway Address:", NUMERIC_IP, [this](String input, bool ok) {
+        networkSettingsMenu->addItem("Gateway: " + props.router, nullptr, []() {
+            PageManager::showInput("Enter Gateway Address:", NUMERIC_IP, [](String input, bool ok) {
                 if (ok) {
-                    WiFiConfigManager::NetworkProperties props = wifiManager->loadNetworkProperties();
+                    WiFiConfigManager::NetworkProperties props = WiFiConfigManager::getInstance().loadNetworkProperties();
                     props.router = input;
-                    wifiManager->saveNetworkProperties(props);
+                    WiFiConfigManager::getInstance().saveNetworkProperties(props);
                     PageManager::showPopup("Gateway saved");
                 }
             });
         });
         
         // DNS Server
-        networkSettingsMenu->addItem("DNS Server: " + props.dns, nullptr, [this]() {
-            PageManager::showInput("Enter DNS Server:", NUMERIC_IP, [this](String input, bool ok) {
+        networkSettingsMenu->addItem("DNS Server: " + props.dns, nullptr, []() {
+            PageManager::showInput("Enter DNS Server:", NUMERIC_IP, [](String input, bool ok) {
                 if (ok) {
-                    WiFiConfigManager::NetworkProperties props = wifiManager->loadNetworkProperties();
+                    WiFiConfigManager::NetworkProperties props = WiFiConfigManager::getInstance().loadNetworkProperties();
                     props.dns = input;
-                    wifiManager->saveNetworkProperties(props);
+                    WiFiConfigManager::getInstance().saveNetworkProperties(props);
                     PageManager::showPopup("DNS Server saved");
                 }
             });
@@ -195,13 +194,13 @@ void UIManager::setupMenus() {
     });
     
     // Connect to network option
-    wifiSubMenu->addItem("Connect", nullptr, [this]() {
+    wifiSubMenu->addItem("Connect", nullptr, []() {
         PageManager::showLoading("Connecting to WiFi...");
-        wifiManager->startNetwork();
+        WiFiConfigManager::getInstance().startNetwork();
         
         // Wait for connection (you might want to implement a timeout)
         for (int i = 0; i < 20; i++) {
-            if (wifiManager->isConnected()) {
+            if (WiFiConfigManager::getInstance().isConnected()) {
                 break;
             }
             delay(500);
@@ -209,9 +208,9 @@ void UIManager::setupMenus() {
         
         PageManager::hideLoading();
         
-        if (wifiManager->isConnected()) {
+        if (WiFiConfigManager::getInstance().isConnected()) {
             // Get current connection information
-            WiFiConfigManager::ConnectionInfo info = wifiManager->getConnectionInfo();
+            WiFiConfigManager::ConnectionInfo info = WiFiConfigManager::getInstance().getConnectionInfo();
 
             // Display in a popup or status screen
             String statusMessage = "SSID: " + info.ssid + "\n" +
@@ -228,13 +227,13 @@ void UIManager::setupMenus() {
     });
     
     // Disconnect from network option
-    wifiSubMenu->addItem("Disconnect", nullptr, [this]() {
-        wifiManager->stopNetwork();
+    wifiSubMenu->addItem("Disconnect", nullptr, []() {
+        WiFiConfigManager::getInstance().stopNetwork();
         PageManager::showPopup("Disconnected from WiFi");
     });
 
-    wifiSubMenu->addItem("Show Current Config", nullptr, [this]() {
-        WiFiConfigManager::NetworkProperties props = wifiManager->loadNetworkProperties();
+    wifiSubMenu->addItem("Show Current Config", nullptr, []() {
+        WiFiConfigManager::NetworkProperties props = WiFiConfigManager::getInstance().loadNetworkProperties();
         String configInfo = "SSID: " + props.ssid + "\n" +
                            "DHCP: " + String(props.dhcp ? "Yes" : "No") + "\n";
         
@@ -246,7 +245,7 @@ void UIManager::setupMenus() {
         }
 
         // Get current connection information
-        WiFiConfigManager::ConnectionInfo info = wifiManager->getConnectionInfo();
+        WiFiConfigManager::ConnectionInfo info = WiFiConfigManager::getInstance().getConnectionInfo();
 
         // Display in a popup or status screen
         configInfo +=  "Connection info: \n";
@@ -290,7 +289,7 @@ void UIManager::setupMenus() {
     PageManager::pushPage(std::move(mainMenu));
 }
 
-void UIManager::setupLocoDriverPagee() {
-    auto locoDriverPage = std::make_unique<LocoDriverPage>(locoManager);
-    PageManager::pushPage(std::move(locoDriverPage));
+void UIManager::setupLocoDriverPage() {
+    // Use default constructor which internally uses DCCCommandManager singleton
+    PageManager::pushPage(std::make_unique<LocoDriverPage>());
 }

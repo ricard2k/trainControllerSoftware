@@ -3,7 +3,8 @@
 #include "PageManager.h"
 #include "ExtendedKeys.h"
 
-LocoDriverPage::LocoDriverPage(LocoCommandManager* manager) : locoManager(manager) {
+// Updated constructor to accept reference instead of pointer
+LocoDriverPage::LocoDriverPage(LocoCommandManager& manager) : locoManager(manager) {
     // Initialize with default values
     currentSpeed = 0;
     currentBrake = 0;
@@ -115,14 +116,14 @@ void LocoDriverPage::handleInput(IKeyboard* keyboard) {
     if (keys & ExtendedKeys::KEY_TIGHT_BRAKE) {
         // Increase brake pressure (max 100)
         currentBrake = min(currentBrake + 5, 100);
-        locoManager->setBrake(currentBrake);
+        locoManager.setBrake(currentBrake);  // Changed from -> to .
         needsRedraw = true;
     }
     
     if (keys & ExtendedKeys::KEY_RELEASE_BRAKE) {
         // Decrease brake pressure (min 0)
         currentBrake = max(currentBrake - 5, 0);
-        locoManager->setBrake(currentBrake);
+        locoManager.setBrake(currentBrake);  // Changed from -> to .
         needsRedraw = true;
     }
     
@@ -130,14 +131,14 @@ void LocoDriverPage::handleInput(IKeyboard* keyboard) {
     if (keys & KEY_UP) {
         // Increase speed (max 100)
         currentSpeed = min(currentSpeed + 5, 100);
-        locoManager->setSpeed(currentSpeed);
+        locoManager.setSpeed(currentSpeed);  // Changed from -> to .
         needsRedraw = true;
     }
     
     if (keys & KEY_DOWN) {
         // Decrease speed (min 0)
         currentSpeed = max(currentSpeed - 5, 0);
-        locoManager->setSpeed(currentSpeed);
+        locoManager.setSpeed(currentSpeed);  // Changed from -> to .
         needsRedraw = true;
     }
     

@@ -25,5 +25,5 @@ private:
     TaskHandle_t uiTaskHandle; // Handle for the UI task
     IKeyboard* keyboard; // Pointer to the keyboard interface
     AnalogSwitch* analogSwitch; // Analog switch for channel selection
-    WiFiConfigManager* wifiManager; // Pointer to the WiFi configuration manager
+    // No longer need a WiFiConfigManager pointer as we'll use singleton instance
 };

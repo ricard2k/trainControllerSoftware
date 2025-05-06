@@ -5,6 +5,12 @@
 
 class DCCCommandManager : public LocoCommandManager {
 public:
+    // Get the singleton instance
+    static DCCCommandManager& getInstance() {
+        static DCCCommandManager instance;
+        return instance;
+    }
+    
     void initialize() override;
     void shutdown() override;
     void sendCommand(const String& command) override;
@@ -18,5 +24,8 @@ protected:
     void sendHornCommand(bool active) override;
 
 private:
+    // Private constructor for singleton pattern
+    DCCCommandManager() {}
+    
     String lightStatusToString(LightStatus status);
 };
