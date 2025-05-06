@@ -21,11 +21,11 @@ public:
 
     virtual ~LocoCommandManager() {}
 
-    // Initialize the system
-    virtual void initialize() = 0;
+    // Connect to the system with the specified connection URL
+    virtual void connect(const String& connectionUrl) = 0;
 
-    // Shutdown the system
-    virtual void shutdown() = 0;
+    // Disconnect from the system
+    virtual void disconnect() = 0;
 
     // Send a generic command
     virtual void sendCommand(const String& command) = 0;

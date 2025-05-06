@@ -1,11 +1,11 @@
 #include "DccExCommandManager.h"
 
-void DccExCommandManager::initialize() {
-    // Add DccEx initialization code here
+void DccExCommandManager::connect(const String& connectionUrl) {
+    // Add DccEx connection code here using the connectionUrl
 }
 
-void DccExCommandManager::shutdown() {
-    // Add DccEx shutdown code here
+void DccExCommandManager::disconnect() {
+    // Add DccEx disconnection code here
 }
 
 void DccExCommandManager::sendCommand(const String& command) {

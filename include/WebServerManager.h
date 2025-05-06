@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include "WiFiConfigManager.h"
@@ -34,15 +33,8 @@ private:
     // API endpoints
     void handleRoot(AsyncWebServerRequest *request);
     void handleGetWiFiStatus(AsyncWebServerRequest *request);
-    void handleGetTrainStatus(AsyncWebServerRequest *request);
-    void handleSetSpeed(AsyncWebServerRequest *request);
-    void handleSetBrake(AsyncWebServerRequest *request);
-    void handleSetLights(AsyncWebServerRequest *request);
-    void handleSetControls(AsyncWebServerRequest *request);
     
     // Helper methods
     void sendJsonResponse(AsyncWebServerRequest *request, JsonDocument& doc);
     void sendErrorResponse(AsyncWebServerRequest *request, int code, const String& message);
-    String getLightStatusString(LocoCommandManager::LightStatus status);
-    LocoCommandManager::LightStatus parseLightStatus(const String& statusStr);
 };

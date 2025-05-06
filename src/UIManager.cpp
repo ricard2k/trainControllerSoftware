@@ -20,12 +20,12 @@ UIManager::~UIManager() {
 void UIManager::begin() {
 
     //create an instance of keyboard
-    static constexpr uint8_t rowPins[] = {D15, D16};
-    static constexpr uint8_t colPins[] = {D17, D18, D19};
-    keyboard = new MatrixKeyboard(rowPins, colPins, D22);
+    static constexpr uint8_t rowPins[] = {D17, D18};
+    static constexpr uint8_t colPins[] = {D14, D15, D16};
+    keyboard = new MatrixKeyboard(rowPins, colPins, D19);
     
     // Create an instance of AnalogSwitch
-    analogSwitch = new AnalogSwitch(D14, D15, D16);
+    analogSwitch = new AnalogSwitch(D21, D22);
     
     // Initialize the WiFiConfigManager singleton with config path
     WiFiConfigManager::getInstance("/wifi_config.json");
@@ -290,8 +290,10 @@ void UIManager::setupMenus() {
         auto& factory = LocoCommandManagerFactory::getInstance();
         String currentUrl = factory.getConnectionUrl();
         
-        PageManager::showInput("Enter Connection URL:", currentUrl,
-            ALPHANUMERIC, std::function<void(String, bool)>([](String input, bool ok) {
+        PageManager::showInput("Enter Connection URL:", 
+            ALPHANUMERIC, 
+            currentUrl,
+            [](String input, bool ok) {
                 if (ok) {
                     auto& factory = LocoCommandManagerFactory::getInstance();
                     factory.setConnectionUrl(input);

@@ -1,11 +1,11 @@
 #include "JMRICommandManager.h"
 
-void JMRICommandManager::initialize() {
-    // Add JMRI initialization code here
+void JMRICommandManager::connect(const String& connectionUrl) {
+    // Add JMRI connection code here using the connectionUrl
 }
 
-void JMRICommandManager::shutdown() {
-    // Add JMRI shutdown code here
+void JMRICommandManager::disconnect() {
+    // Add JMRI disconnection code here
 }
 
 void JMRICommandManager::sendCommand(const String& command) {

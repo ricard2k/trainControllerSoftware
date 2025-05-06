@@ -11,9 +11,6 @@ LocoCommandManagerFactory::LocoCommandManagerFactory(const char* filePath)
 }
 
 bool LocoCommandManagerFactory::loadConfiguration() {
-    if (!LittleFS.begin(true)) {
-        return createDefaultConfigFile(); // If mounting fails, create a default config
-    }
 
     if (!LittleFS.exists(configFilePath)) {
         return createDefaultConfigFile(); // If file doesn't exist, create it
@@ -24,7 +21,7 @@ bool LocoCommandManagerFactory::loadConfiguration() {
         return createDefaultConfigFile(); // If file can't be opened, create it
     }
 
-    StaticJsonDocument<256> doc;
+    JsonDocument doc;
     DeserializationError error = deserializeJson(doc, configFile);
     configFile.close();
 
@@ -50,10 +47,6 @@ bool LocoCommandManagerFactory::loadConfiguration() {
 
 // New method to create default configuration file
 bool LocoCommandManagerFactory::createDefaultConfigFile() {
-    // Ensure file system is mounted
-    if (!LittleFS.begin(true)) {
-        return false;
-    }
     
     // Set default manager type
     currentManagerType = ManagerType::DccEx;
@@ -63,10 +56,6 @@ bool LocoCommandManagerFactory::createDefaultConfigFile() {
 }
 
 bool LocoCommandManagerFactory::saveConfiguration() {
-    // Ensure file system is mounted
-    if (!LittleFS.begin(true)) {
-        return false;
-    }
     
     // Create configuration file
     File configFile = LittleFS.open(configFilePath, "w");
@@ -74,7 +63,7 @@ bool LocoCommandManagerFactory::saveConfiguration() {
         return false;
     }
     
-    StaticJsonDocument<256> doc;
+    JsonDocument doc;
     doc["managerType"] = (currentManagerType == ManagerType::JMRI) ? "JMRI" : "DccEx";
     doc["connectionUrl"] = connectionUrl;
     
@@ -105,14 +94,10 @@ LocoCommandManager* LocoCommandManagerFactory::getLocoCommandManager() {
         // Create the appropriate manager based on configuration
         if (currentManagerType == ManagerType::JMRI) {
             commandManager = std::make_unique<JMRICommandManager>();
-            if (!connectionUrl.isEmpty()) {
-                commandManager->connect(connectionUrl);
-            }
+            commandManager->connect(connectionUrl);
         } else {
             commandManager = std::make_unique<DccExCommandManager>();
-            if (!connectionUrl.isEmpty()) {
-                commandManager->connect(connectionUrl);
-            }
+            commandManager->connect(connectionUrl);
         }
         isInitialized = true;
     }

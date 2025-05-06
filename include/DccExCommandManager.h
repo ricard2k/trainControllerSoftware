@@ -8,8 +8,8 @@ public:
     // Public constructor
     DccExCommandManager() {}
     
-    void initialize() override;
-    void shutdown() override;
+    void connect(const String& connectionUrl) override;
+    void disconnect() override;
     void sendCommand(const String& command) override;
 
 protected:

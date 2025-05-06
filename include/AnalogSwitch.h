@@ -6,11 +6,10 @@ class AnalogSwitch {
 private:
     uint8_t pinS0; // GPIO pin for S0
     uint8_t pinS1; // GPIO pin for S1
-    uint8_t pinS2; // GPIO pin for S2
 
 public:
     // Constructor
-    AnalogSwitch(uint8_t s0, uint8_t s1, uint8_t s2);
+    AnalogSwitch(uint8_t s0, uint8_t s1);
 
     // Initialize the pins
     void begin();
