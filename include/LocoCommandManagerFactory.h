@@ -22,6 +22,31 @@ public:
 
     // Get the appropriate LocoCommandManager implementation
     LocoCommandManager* getLocoCommandManager();
+    
+    // Enum for manager types
+    enum class ManagerType {
+        DccEx,
+        JMRI
+    };
+    
+    // Get current manager type
+    ManagerType getManagerType() const {
+        return currentManagerType;
+    }
+    
+    // Get connection URL
+    String getConnectionUrl() const {
+        return connectionUrl;
+    }
+    
+    // Set manager type and save configuration
+    bool setManagerType(ManagerType type);
+    
+    // Set connection URL and save configuration
+    bool setConnectionUrl(const String& url);
+    
+    // Save current configuration to file
+    bool saveConfiguration();
 
 private:
     // Private constructor for singleton pattern that accepts a file path
@@ -39,12 +64,10 @@ private:
     // Configuration file path
     const char* configFilePath;
     
-    // Type of command manager to use (DccEx or JMRI)
-    enum class ManagerType {
-        DccEx,
-        JMRI
-    };
+    // Connection URL for the command manager
+    String connectionUrl;
     
+    // Type of command manager to use (DccEx or JMRI)
     ManagerType currentManagerType;
     bool isInitialized;
 };

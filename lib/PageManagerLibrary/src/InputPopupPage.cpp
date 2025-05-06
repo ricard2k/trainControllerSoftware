@@ -10,6 +10,16 @@ InputPopupPage::InputPopupPage(const String &prompt, InputMode mode,
   rows = (keys.size() + cols - 1) / cols;
 }
 
+// New constructor implementation that accepts initial value
+InputPopupPage::InputPopupPage(const String &prompt, InputMode mode, 
+                               const String &initialValue,
+                               std::function<void(String, bool)> onComplete)
+    : prompt(prompt), mode(mode), inputBuffer(initialValue), onComplete(onComplete)
+{
+  buildKeyboard();
+  rows = (keys.size() + cols - 1) / cols;
+}
+
 void InputPopupPage::buildKeyboard()
 {
   if (mode == NUMERIC)

@@ -8,6 +8,17 @@ DialogListPage::DialogListPage(const String& title,
                                std::function<void(bool, ListItem)> callback)
     : title(title), items(items), callback(callback) {}
 
+// New constructor implementation that accepts initial selected index
+DialogListPage::DialogListPage(const String& title,
+                               const std::vector<ListItem>& items,
+                               int initialSelectedIndex,
+                               std::function<void(bool, ListItem)> callback)
+    : title(title), items(items), callback(callback) {
+    // Validate the initial index to ensure it's within bounds
+    if (initialSelectedIndex >= 0 && initialSelectedIndex < (int)items.size()) {
+        selectedIndex = initialSelectedIndex;
+    }
+}
 
 void DialogListPage::draw() {
     ThreadSafeTFT::withLock([this](TFT_eSPI& tft) {

@@ -6,7 +6,7 @@
 
 // Constructor now takes the file path as parameter
 LocoCommandManagerFactory::LocoCommandManagerFactory(const char* filePath)
-    : configFilePath(filePath), currentManagerType(ManagerType::DccEx), isInitialized(false) {
+    : configFilePath(filePath), connectionUrl(""), currentManagerType(ManagerType::DccEx), isInitialized(false) {
     loadConfiguration();
 }
 
@@ -38,6 +38,12 @@ bool LocoCommandManagerFactory::loadConfiguration() {
     } else {
         currentManagerType = ManagerType::DccEx;
     }
+    
+    // Load connection URL if available
+    const char* url = doc["connectionUrl"];
+    if (url) {
+        connectionUrl = String(url);
+    }
 
     return true;
 }
@@ -51,15 +57,26 @@ bool LocoCommandManagerFactory::createDefaultConfigFile() {
     
     // Set default manager type
     currentManagerType = ManagerType::DccEx;
+    connectionUrl = ""; // Default empty URL
     
-    // Create configuration file with default values
+    return saveConfiguration();
+}
+
+bool LocoCommandManagerFactory::saveConfiguration() {
+    // Ensure file system is mounted
+    if (!LittleFS.begin(true)) {
+        return false;
+    }
+    
+    // Create configuration file
     File configFile = LittleFS.open(configFilePath, "w");
     if (!configFile) {
         return false;
     }
     
     StaticJsonDocument<256> doc;
-    doc["managerType"] = "DccEx"; // Default to DccEx
+    doc["managerType"] = (currentManagerType == ManagerType::JMRI) ? "JMRI" : "DccEx";
+    doc["connectionUrl"] = connectionUrl;
     
     // Write JSON to file
     if (serializeJson(doc, configFile) == 0) {
@@ -68,7 +85,19 @@ bool LocoCommandManagerFactory::createDefaultConfigFile() {
     }
     
     configFile.close();
+    // Reset the initialized flag to recreate the manager with new settings
+    isInitialized = false;
     return true;
+}
+
+bool LocoCommandManagerFactory::setManagerType(ManagerType type) {
+    currentManagerType = type;
+    return saveConfiguration();
+}
+
+bool LocoCommandManagerFactory::setConnectionUrl(const String& url) {
+    connectionUrl = url;
+    return saveConfiguration();
 }
 
 LocoCommandManager* LocoCommandManagerFactory::getLocoCommandManager() {
@@ -76,8 +105,14 @@ LocoCommandManager* LocoCommandManagerFactory::getLocoCommandManager() {
         // Create the appropriate manager based on configuration
         if (currentManagerType == ManagerType::JMRI) {
             commandManager = std::make_unique<JMRICommandManager>();
+            if (!connectionUrl.isEmpty()) {
+                commandManager->connect(connectionUrl);
+            }
         } else {
             commandManager = std::make_unique<DccExCommandManager>();
+            if (!connectionUrl.isEmpty()) {
+                commandManager->connect(connectionUrl);
+            }
         }
         isInitialized = true;
     }

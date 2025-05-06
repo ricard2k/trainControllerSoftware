@@ -38,12 +38,14 @@ void DccExCommandManager::sendHornCommand(bool active) {
 
 String DccExCommandManager::lightStatusToString(LightStatus status) {
     switch (status) {
-        case LightStatus::ON:
-            return "ON";
         case LightStatus::OFF:
             return "OFF";
-        case LightStatus::FLASHING:
-            return "FLASHING";
+        case LightStatus::DIMM:
+            return "DIMM";
+        case LightStatus::BRIGHT:
+            return "BRIGHT";
+        case LightStatus::DITCHES:
+            return "DITCHES";
         default:
             return "UNKNOWN";
     }

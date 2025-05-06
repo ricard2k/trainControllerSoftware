@@ -16,6 +16,9 @@ class InputPopupPage : public IPage {
 public:
     InputPopupPage(const String& prompt, InputMode mode,
                    std::function<void(String, bool)> onComplete);
+    // New constructor with initial value parameter
+    InputPopupPage(const String& prompt, InputMode mode, const String& initialValue,
+                   std::function<void(String, bool)> onComplete);
     void handleInput(IKeyboard* keyboard) override;
     void draw() override;
 

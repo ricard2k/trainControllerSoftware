@@ -17,7 +17,17 @@ public:
         const String& title,
         const std::vector<ListItem>& options,
         std::function<void(bool accepted, ListItem selected)> onResult);
+    // New method that accepts an initial selected index
+    static void showListDialog(
+        const String& title,
+        const std::vector<ListItem>& options,
+        int initialSelectedIndex,
+        std::function<void(bool accepted, ListItem selected)> onResult);
     static void showInput(const String& prompt, InputMode mode,
+        std::function<void(String, bool)> onComplete);
+    // New method that accepts an initial value
+    static void showInput(const String& prompt, InputMode mode,
+        const String& initialValue,
         std::function<void(String, bool)> onComplete);
     static void showPopup(const String& message, std::function<void()> onClose = nullptr);
     static void pushPage(std::unique_ptr<IPage> page);

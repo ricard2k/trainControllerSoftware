@@ -12,6 +12,11 @@ class DialogListPage : public IPage {
 public:
     DialogListPage(const String& title, const std::vector<ListItem>& items,
                    std::function<void(bool accepted, ListItem selected)> callback);
+    
+    // New constructor that accepts an initial selected index
+    DialogListPage(const String& title, const std::vector<ListItem>& items, 
+                   int initialSelectedIndex,
+                   std::function<void(bool accepted, ListItem selected)> callback);
 
     void handleInput(IKeyboard* keyboard) override;
     void draw() override;

@@ -69,6 +69,7 @@ void UIManager::uiTask(void* param) {
 void UIManager::setupMenus() {
     auto mainMenu = std::make_unique<MenuPage>();
     auto wifiSubMenu = std::make_unique<MenuPage>(mainMenu.get());
+    auto controlSystemMenu = std::make_unique<MenuPage>(mainMenu.get());
 
     // Setup WiFi submenu
     wifiSubMenu->addItem("Scan for Networks", nullptr, [this]() {
@@ -258,32 +259,66 @@ void UIManager::setupMenus() {
         PageManager::showPopup(configInfo.c_str());
     });
 
+    // Setup Control System configuration submenu
+    controlSystemMenu->addItem("System Type", nullptr, []() {
+        // Create vector for system type options
+        std::vector<ListItem> systemTypes = {
+            {"DCC-Ex", static_cast<int>(LocoCommandManagerFactory::ManagerType::DccEx)},
+            {"JMRI", static_cast<int>(LocoCommandManagerFactory::ManagerType::JMRI)}
+        };
+        
+        // Get current manager type
+        auto& factory = LocoCommandManagerFactory::getInstance();
+        auto currentType = factory.getManagerType();
+        
+        // Pre-select current type
+        int selectedIndex = (currentType == LocoCommandManagerFactory::ManagerType::JMRI) ? 1 : 0;
+        
+        // Show list dialog with system types
+        PageManager::showListDialog("Select System Type", systemTypes, selectedIndex,
+            [](bool accepted, ListItem selected) {
+                if (accepted) {
+                    auto& factory = LocoCommandManagerFactory::getInstance();
+                    auto newType = static_cast<LocoCommandManagerFactory::ManagerType>(selected.value);
+                    factory.setManagerType(newType);
+                    PageManager::showPopup("System Type updated to " + selected.label);
+                }
+            });
+    });
+    
+    controlSystemMenu->addItem("Connection URL", nullptr, []() {
+        auto& factory = LocoCommandManagerFactory::getInstance();
+        String currentUrl = factory.getConnectionUrl();
+        
+        PageManager::showInput("Enter Connection URL:", currentUrl,
+            ALPHANUMERIC, std::function<void(String, bool)>([](String input, bool ok) {
+                if (ok) {
+                    auto& factory = LocoCommandManagerFactory::getInstance();
+                    factory.setConnectionUrl(input);
+                    PageManager::showPopup("Connection URL saved");
+                }
+            });
+    });
+    
+    controlSystemMenu->addItem("Show Current Config", nullptr, []() {
+        auto& factory = LocoCommandManagerFactory::getInstance();
+        auto managerType = factory.getManagerType();
+        String systemType = (managerType == LocoCommandManagerFactory::ManagerType::JMRI) ? "JMRI" : "DCC-Ex";
+        String url = factory.getConnectionUrl();
+        if (url.isEmpty()) {
+            url = "<Not Set>";
+        }
+        
+        String configInfo = "System Type: " + systemType + "\n" +
+                           "Connection URL: " + url;
+                           
+        PageManager::showPopup(configInfo.c_str());
+    });
+
     // Setup main menu
     mainMenu->addItem("Configure WiFi", std::move(wifiSubMenu));
+    mainMenu->addItem("Control System", std::move(controlSystemMenu));
     
-    // Add other main menu items
-    mainMenu->addItem("Option 1", nullptr, []() {
-        PageManager::showPopup("Option 1 selected");
-    });
-    
-    mainMenu->addItem("Option 3", nullptr, []() {
-        PageManager::showInput("Enter value:", ALPHANUMERIC, [](String input, bool ok) {
-            if (ok) {
-                Serial1.printf("Input: %s\n", input.c_str());
-            } else {
-                Serial1.println("Input cancelled");
-            }
-        });
-    });
-    
-    mainMenu->addItem("Loading example", nullptr, []() {
-        PageManager::showLoading("Loading...");
-        delay(5000);
-        PageManager::hideLoading();
-    });
-    
-    mainMenu->addItem("Option 5");
-    mainMenu->addItem("Option 6");
 
     // Push the main menu to the PageManager
     PageManager::pushPage(std::move(mainMenu));
