@@ -6,7 +6,7 @@
 #include "Config.h"
 #include "MatrixKeyboard.h"
 #include "LocoDriverPage.h"
-#include "DCCCommandManager.h" // Add the DCCCommandManager include for singleton access
+#include "LocoCommandManagerFactory.h" 
 
 UIManager::UIManager() : tft(), uiTaskHandle(nullptr) {}
 
@@ -290,6 +290,5 @@ void UIManager::setupMenus() {
 }
 
 void UIManager::setupLocoDriverPage() {
-    // Use default constructor which internally uses DCCCommandManager singleton
     PageManager::pushPage(std::make_unique<LocoDriverPage>());
 }

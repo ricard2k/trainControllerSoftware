@@ -5,11 +5,8 @@
 
 class JMRICommandManager : public LocoCommandManager {
 public:
-    // Get the singleton instance
-    static JMRICommandManager& getInstance() {
-        static JMRICommandManager instance;
-        return instance;
-    }
+    // Public constructor 
+    JMRICommandManager() {}
     
     void initialize() override;
     void shutdown() override;
@@ -24,8 +21,5 @@ protected:
     void sendHornCommand(bool active) override;
 
 private:
-    // Private constructor for singleton pattern
-    JMRICommandManager() {}
-    
     String lightStatusToString(LightStatus status);
 };

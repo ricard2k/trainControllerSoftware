@@ -3,13 +3,10 @@
 #include "LocoCommandManager.h"
 #include <Arduino.h> // For Arduino's String class
 
-class DCCCommandManager : public LocoCommandManager {
+class DccExCommandManager : public LocoCommandManager {
 public:
-    // Get the singleton instance
-    static DCCCommandManager& getInstance() {
-        static DCCCommandManager instance;
-        return instance;
-    }
+    // Public constructor
+    DccExCommandManager() {}
     
     void initialize() override;
     void shutdown() override;
@@ -24,8 +21,5 @@ protected:
     void sendHornCommand(bool active) override;
 
 private:
-    // Private constructor for singleton pattern
-    DCCCommandManager() {}
-    
     String lightStatusToString(LightStatus status);
 };
